@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Digital Clock</title>
+    <!-- Tailwind CSS CDN for utility classes -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for the clock, overriding some Tailwind defaults for specific effects */
+        body {
+            background-color: #1a202c; /* Dark background for contrast */
+            display: flex;
+            flex-direction: column; /* Allow content to stack vertically */
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Inter', sans-serif; /* Recommended font */
+            color: #e2e8f0; /* Light text color */
+            overflow: hidden; /* Prevent scrollbars */
+        }
+
+        .clock-container {
+            background-color: #2d3748; /* Slightly lighter dark background for the clock */
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5); /* Soft shadow */
+            border-radius: 20px; /* More rounded corners */
+            padding: 2.5rem 3.5rem; /* More padding */
+            text-align: center;
+            border: 2px solid #4a5568; /* Subtle border */
+            position: relative; /* For the glow effect pseudo-element */
+            overflow: hidden; /* Ensure glow doesn't spill */
+        }
+
+        /* Subtle pulsating border glow */
+        .clock-container::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            background: linear-gradient(45deg, #00f0ff, #8a2be2, #ff007f, #00f0ff);
+            background-size: 400% 400%;
+            z-index: -1;
+            filter: blur(8px);
+            border-radius: 25px; /* Slightly larger than container for blur */
+            animation: glowing-border 10s linear infinite;
+            opacity: 0.7;
+        }
+
+        @keyframes glowing-border {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+
+        .time-display {
+            font-size: 5rem; /* Larger font for time */
+            font-weight: bold;
+            letter-spacing: 3px; /* Add some letter spacing */
+            text-shadow: 0 0 15px rgba(0, 255, 255, 0.7), 0 0 25px rgba(0, 255, 255, 0.5); /* Neon glow effect */
+            transition: all 0.5s ease-in-out; /* Smooth transition for time changes */
+        }
+
+        .date-display {
+            font-size: 1.5rem; /* Size for date */
+            margin-top: 1rem;
+            color: #a0aec0; /* Slightly muted color for date */
+        }
+
+        .toggle-button-container {
+            margin-top: 2rem;
+        }
+
+        .toggle-button {
+            background-color: #4a5568;
+            color: #e2e8f0;
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px; /* Fully rounded pill shape */
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            outline: none;
+            border: 2px solid #6a768b;
+        }
+
+        .toggle-button:hover {
+            background-color: #6a768b;
+            transform: translateY(-2px); /* Slight lift on hover */
+        }
+
+        .toggle-button:active {
+            background-color: #4a5568;
+            transform: translateY(0); /* Return to original position on click */
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .clock-container {
+                padding: 2rem 2.5rem;
+            }
+            .time-display {
+                font-size: 3.5rem; /* Adjust font size for smaller screens */
+            }
+            .date-display {
+                font-size: 1.2rem;
+            }
+            .toggle-button {
+                padding: 0.6rem 1.2rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .clock-container {
+                padding: 1.5rem 2rem;
+            }
+            .time-display {
+                font-size: 2.5rem; /* Even smaller for mobile */
+                letter-spacing: 1px;
+            }
+            .date-display {
+                font-size: 1rem;
+            }
+            .toggle-button {
+                padding: 0.5rem 1rem;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+    <script>
+        let is24HourFormat = true; // State variable to track the time format
+
+        /**
+         * Function to update the digital clock display.
+         * It fetches the current time and date, formats them, and updates the DOM.
+         */
+        function updateClock() {
+            const now = new Date(); // Get the current date and time
+
+            let hours = now.getHours();
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            let ampm = '';
+
+            // Determine time format based on is24HourFormat state
+            if (!is24HourFormat) {
+                ampm = hours >= 12 ? ' PM' : ' AM';
+                hours = hours % 12;
+                hours = hours ? hours : 12; // The hour '0' should be '12' in 12-hour format
+            }
+
+            const timeString = `${String(hours).padStart(2, '0')}:${minutes}:${seconds}${ampm}`;
+
+            // Format the date: Day, Month DD, YYYY
+            const options = {
+                weekday: 'long',    // e.g., "Monday"
+                year: 'numeric',    // e.g., "2023"
+                month: 'long',      // e.g., "September"
+                day: 'numeric'      // e.g., "25"
+            };
+            const dateString = now.toLocaleDateString(undefined, options); // Use user's locale for date format
+
+            // Update the HTML elements
+            document.getElementById('time').textContent = timeString;
+            document.getElementById('date').textContent = dateString;
+        }
+
+        /**
+         * Toggles the time format between 12-hour and 24-hour.
+         * Updates the state variable and immediately calls updateClock to reflect the change.
+         */
+        function toggleTimeFormat() {
+            is24HourFormat = !is24HourFormat; // Flip the boolean state
+            updateClock(); // Update the clock immediately with the new format
+            // Optionally, update the button text to reflect the current mode
+            const button = document.getElementById('formatToggle');
+            button.textContent = is24HourFormat ? 'Switch to 12-Hour' : 'Switch to 24-Hour';
+        }
+
+        // Call updateClock initially to avoid a 1-second delay before the clock appears
+        // Set an interval to update the clock every second (1000 milliseconds)
+        window.onload = function() {
+            updateClock(); // Initial call
+            setInterval(updateClock, 1000); // Update every second
+
+            // Set initial button text
+            const button = document.getElementById('formatToggle');
+            button.textContent = is24HourFormat ? 'Switch to 12-Hour' : 'Switch to 24-Hour';
+        };
+    </script>
+</head>
+<body>
+    <div class="clock-container">
+        <!-- Display for the time -->
+        <div id="time" class="time-display">
+            00:00:00
+        </div>
+        <!-- Display for the date -->
+        <div id="date" class="date-display">
+            Loading Date...
+        </div>
+    </div>
+    <!-- Button to toggle time format -->
+    <div class="toggle-button-container">
+        <button id="formatToggle" class="toggle-button" onclick="toggleTimeFormat()">
+            Switch to 12-Hour
+        </button>
+    </div>
+</body>
+</html>
